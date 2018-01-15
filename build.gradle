@@ -12,6 +12,12 @@ subprojects {
     version = '1.0'
 }
 
+configure(subprojects) { 
+    def path = new File(it.projectDir, "src/docs")
+    println "configure block A =>" + path.getPath()
+    println "configure block A =>" + path.exists()
+}
+
 configure(subprojects.findAll {it.name == 'greeter' || it.name == 'greeting-library'} ) { 
     apply plugin : 'groovy'
 
@@ -20,4 +26,10 @@ configure(subprojects.findAll {it.name == 'greeter' || it.name == 'greeting-libr
             exclude module : 'groovy-all'
         }
     }
+
+    println "configure block B =>" + it.path
 }
+
+configure(subprojects.findAll { new File(it.projectDir, "src/docs").exists() } ) { 
+    println "configure block C =>" + it.path
+} 
