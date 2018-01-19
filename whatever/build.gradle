@@ -1,0 +1,35 @@
+println 'This is executed during the configuration phase.'
+
+task cmd1(type: Exec) {
+    environment "WHATEVER", "ever3"
+    logger.lifecycle("cmd1 WHATEVER=ever3: configure from :whatever - project1")
+    commandLine "bash", "-c", "env | grep WHATEVER"
+
+    doFirst {
+        println "======= cmd1:..."
+    }
+
+    doLast {
+        println "======= cmd1: done"
+    }
+}
+
+model {
+    pythonProject {
+        usePipenv = false
+    }
+    tasks {
+        cmd1 {
+            environment "WHATEVER", "ever5"
+            logger.lifecycle("cmd1 WHATEVER=ever5: configure from :whatever - model")
+            doLast {
+                println "====== cmd1: from model"
+            }
+        }
+    }
+}
+
+configure(tasks.findAll({it instanceof Exec})) { task ->
+    environment "WHATEVER", "ever4"
+    logger.lifecycle("$task.name WHATEVER=ever4: configure from :whatever - project2")
+}

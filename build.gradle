@@ -3,20 +3,23 @@ plugins {
 }
 
 allprojects {
+    apply plugin: 'base'
+
     repositories {
         jcenter() 
     }
+
+    project.ext['libs'] = [
+        "what": "EVER"
+    ]
 }
 
 subprojects {
     version = '1.0'
 }
 
-configure(subprojects) { 
-    def path = new File(it.projectDir, "src/docs")
-    println "configure block A =>" + path.getPath()
-    println "configure block A =>" + path.exists()
-}
+def pythonProjects = subprojects.findAll({ new File(it.projectDir, 'setup.py').exists() })
+logger.lifecycle("pythonProjects=$pythonProjects")
 
 configure(subprojects.findAll {it.name == 'greeter' || it.name == 'greeting-library'} ) { 
     apply plugin : 'groovy'
@@ -32,4 +35,13 @@ configure(subprojects.findAll {it.name == 'greeter' || it.name == 'greeting-libr
 
 configure(subprojects.findAll { new File(it.projectDir, "src/docs").exists() } ) { 
     println "configure block C =>" + it.path
+} 
+
+configure(pythonProjects) { project ->
+    apply plugin: 'pythonproject'
+
+    tasks.withType(Exec) {  task ->
+        environment(["WHATEVER":"ever1"])
+        logger.lifecycle("$task.name WHATEVER=ever1: configure from : - rootproject")
+    }
 } 
