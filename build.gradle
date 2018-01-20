@@ -1,5 +1,5 @@
 plugins {
-  id 'org.asciidoctor.convert' version '1.5.6' apply false 
+    id 'org.asciidoctor.convert' version '1.5.6' apply false 
 }
 
 allprojects {
@@ -36,7 +36,16 @@ configure(pythonProjects) { project ->
 
     tasks.withType(Exec) {  task ->
         logger.lifecycle("$name: configured from $project - this->$this, owner->$owner, delegate->$delegate")
+        logger.lifecycle("$name: WHATEVER=ever1: configure from: this->$this, delegate->$delegate")
         environment(["WHATEVER":"ever1"])
-        logger.lifecycle("$name: WHATEVER=ever1: configure from: $project")
+
+        doFirst {
+            def cmdStr = commandLine.join(" ")
+            println "$delegate.name => Run `$cmdStr` ..."
+        }
+        doLast {
+            def cmdStr = commandLine.join(" ")
+            println "$delegate.name => Run `$cmdStr` done"
+        }
     }
 } 

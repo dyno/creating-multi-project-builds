@@ -1,8 +1,7 @@
 task cmd1(type: Exec) {
     logger.lifecycle("$delegate.name: created from $project - this->$this, owner->$owner")
-
-    environment "WHATEVER", "ever3"
     logger.lifecycle("$delegate.name: WHATEVER=ever3: configure from $delegate")
+    environment "WHATEVER", "ever3"
     commandLine "bash", "-c", "env | grep WHATEVER"
 }
 
@@ -11,44 +10,43 @@ configure(tasks.findAll({it instanceof Exec})) { task ->
     logger.lifecycle("$delegate.name: WHATEVER=ever4: configure from $delegate")
     environment "WHATEVER", "ever4"
 
-    def cmdStr = commandLine.join(" ")
-    doFirst {
-        println "$delegate.name => Run `$cmdStr` ..."
-    }
-
-    doLast {
-        println "$delegate.name => Run `$cmdStr` done"
-    }
 }
 
 // ============================================================================
 model {
     // https://docs.gradle.org/current/userguide/software_model.html#model-dsl
 
-    pythonProject {
-        logger.lifecycle("$name: configure from $project - this->$this, owner->$owner, delegate->$delegate")
-        // usePipenv = false
-        if (project.hasProperty("usePipenv")) {
-            usePipenv = project.usePipenv
-        } else {
-            project.ext.usePipenv = usePipenv
-        }
-    }
-
     tasks {
         cmd1 {
             logger.lifecycle("$delegate.name: configure from $project - this->$this, owner->$owner")
+            logger.lifecycle("$delegate.name: WHATEVER=ever5: configure from $delegate")
             environment "WHATEVER", "ever5"
+            // XXX: as pythonproject plugin has a rule to reqire pythonProject to be available to mutate tasks
+            // we can assume pythonProject is always configured before cmd1.
+            logger.lifecycle("$name: hello=$project.hello")
         }
 
         cmd2(Exec) {
-            logger.lifecycle("$delegate.name: configure from $project - this->$this, owner->$owner")
+            logger.lifecycle("$delegate.name: created from $project - this->$this, owner->$owner")
             commandLine "echo", "i am $name"
-            if (usePipenv) {
+            if (usePipenv) {  // project.usePipenv is set in pythonProject {}
+                logger.lifecycle("$name: usePipenv=$usePipenv")
                 dependsOn cmd1
             }
         }
     }
-}
 
+    pythonProject {
+        logger.lifecycle("$name: configure from $project - this->$this, owner->$owner, delegate->$delegate")
+        logger.lifecycle("$name: default usePipenv=$usePipenv")
+        if (project.hasProperty("usePipenv")) {
+            usePipenv = project.usePipenv != "false"
+            logger.lifecycle("$name: set usePipenv=$usePipenv")
+        }
+        project.ext.usePipenv = usePipenv
+        logger.lifecycle("$name: usePipenv=$usePipenv, project.usePipenv=$project.usePipenv")
+        project.ext.hello = "world"
+    }
+
+}
 
