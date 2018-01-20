@@ -19,7 +19,7 @@ subprojects {
 }
 
 def pythonProjects = subprojects.findAll({ new File(it.projectDir, 'setup.py').exists() })
-logger.lifecycle("pythonProjects=$pythonProjects")
+logger.lifecycle("$name: created pythonProject=$pythonProjects, - this->$this")
 
 configure(subprojects.findAll {it.name == 'greeter' || it.name == 'greeting-library'} ) { 
     apply plugin : 'groovy'
@@ -29,19 +29,14 @@ configure(subprojects.findAll {it.name == 'greeter' || it.name == 'greeting-libr
             exclude module : 'groovy-all'
         }
     }
-
-    println "configure block B =>" + it.path
 }
-
-configure(subprojects.findAll { new File(it.projectDir, "src/docs").exists() } ) { 
-    println "configure block C =>" + it.path
-} 
 
 configure(pythonProjects) { project ->
     apply plugin: 'pythonproject'
 
     tasks.withType(Exec) {  task ->
+        logger.lifecycle("$name: configured from $project - this->$this, owner->$owner, delegate->$delegate")
         environment(["WHATEVER":"ever1"])
-        logger.lifecycle("$task.name WHATEVER=ever1: configure from : - rootproject")
+        logger.lifecycle("$name: WHATEVER=ever1: configure from: $project")
     }
 } 

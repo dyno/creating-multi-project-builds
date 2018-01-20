@@ -1,35 +1,54 @@
-println 'This is executed during the configuration phase.'
-
 task cmd1(type: Exec) {
-    environment "WHATEVER", "ever3"
-    logger.lifecycle("cmd1 WHATEVER=ever3: configure from :whatever - project1")
-    commandLine "bash", "-c", "env | grep WHATEVER"
+    logger.lifecycle("$delegate.name: created from $project - this->$this, owner->$owner")
 
+    environment "WHATEVER", "ever3"
+    logger.lifecycle("$delegate.name: WHATEVER=ever3: configure from $delegate")
+    commandLine "bash", "-c", "env | grep WHATEVER"
+}
+
+configure(tasks.findAll({it instanceof Exec})) { task ->
+    logger.lifecycle("$delegate.name: configure from $project - this->$this, owner->$owner")
+    logger.lifecycle("$delegate.name: WHATEVER=ever4: configure from $delegate")
+    environment "WHATEVER", "ever4"
+
+    def cmdStr = commandLine.join(" ")
     doFirst {
-        println "======= cmd1:..."
+        println "$delegate.name => Run `$cmdStr` ..."
     }
 
     doLast {
-        println "======= cmd1: done"
+        println "$delegate.name => Run `$cmdStr` done"
     }
 }
 
+// ============================================================================
 model {
+    // https://docs.gradle.org/current/userguide/software_model.html#model-dsl
+
     pythonProject {
-        usePipenv = false
+        logger.lifecycle("$name: configure from $project - this->$this, owner->$owner, delegate->$delegate")
+        // usePipenv = false
+        if (project.hasProperty("usePipenv")) {
+            usePipenv = project.usePipenv
+        } else {
+            project.ext.usePipenv = usePipenv
+        }
     }
+
     tasks {
         cmd1 {
+            logger.lifecycle("$delegate.name: configure from $project - this->$this, owner->$owner")
             environment "WHATEVER", "ever5"
-            logger.lifecycle("cmd1 WHATEVER=ever5: configure from :whatever - model")
-            doLast {
-                println "====== cmd1: from model"
+        }
+
+        cmd2(Exec) {
+            logger.lifecycle("$delegate.name: configure from $project - this->$this, owner->$owner")
+            commandLine "echo", "i am $name"
+            if (usePipenv) {
+                dependsOn cmd1
             }
         }
     }
 }
 
-configure(tasks.findAll({it instanceof Exec})) { task ->
-    environment "WHATEVER", "ever4"
-    logger.lifecycle("$task.name WHATEVER=ever4: configure from :whatever - project2")
-}
+
